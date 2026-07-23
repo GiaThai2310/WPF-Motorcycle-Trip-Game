@@ -16,6 +16,8 @@ before implementing or integrating a game subsystem.
   before the first game starts.
 - Do not commit generated `bin/`, `obj/`, or `.vs/` content.
 - Run `dotnet build WPF-Motorcycle-Trip-Game.csproj` after integration.
+- Keep `.github/workflows/build.yml` passing. CI restores and builds the WPF
+  project in Release mode on Windows with warnings treated as errors.
 
 ## File ownership
 
