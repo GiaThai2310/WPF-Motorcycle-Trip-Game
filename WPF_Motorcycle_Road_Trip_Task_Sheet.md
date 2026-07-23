@@ -78,7 +78,7 @@ public static class GameConstants
     public const double BaseObstacleSpeed = 360;
 
     public const int TargetScore = 1000;
-    public const double ScorePerSecond = 40;
+    public const double ScorePerSecond = 25;
 
     public const double MinimumSpawnGap = 320;
     public const double MaximumSpawnGap = 560;
@@ -88,7 +88,7 @@ public static class GameConstants
 Expected play time:
 
 ```text
-1000 points ÷ 40 points/second ≈ 25 seconds
+1000 points ÷ 25 points/second ≈ 40 seconds
 ```
 
 ## 5. Project structure
@@ -267,7 +267,7 @@ feature/game-engine-integration
 
 ---
 
-## Member 2 — Khang  
+## Member 2 — Văn  
 ### Motorcycle jump movement and physics
 
 #### Files
@@ -408,7 +408,7 @@ feature/collision-service
 
 ---
 
-## Member 5 — Văn  
+## Member 5 — Khang  
 ### Score, win condition, and game-state messages
 
 #### Files
@@ -443,7 +443,7 @@ Score = Math.Min(
 #### Acceptance criteria
 
 - Score is frame-rate independent.
-- Score reaches approximately `1000` after 25 seconds.
+- Score reaches approximately `1000` after 40 seconds.
 - Score never exceeds `1000`.
 - Reset returns score to zero.
 - Victory can be detected through `HasReachedTarget`.
