@@ -1,0 +1,10 @@
+# Set default behavior to automatic text conversion
+* text=auto
+
+# Explicitly use CRLF for C#, XAML, project and solution files for Windows & Visual Studio compatibility
+*.cs text eol=crlf
+*.xaml text eol=crlf
+*.csproj text eol=crlf
+*.sln text eol=crlf
+*.slnx text eol=crlf
+*.md text eol=crlf
