@@ -4,7 +4,6 @@ using WPF_Motorcycle_Trip_Game.Core;
 
 namespace WPF_Motorcycle_Trip_Game.Controllers;
 
-// Owned by: Khang  (feature/bike-controller)
 // Implements full motorcycle jump physics, gravity, ground clamping,
 // double-jump prevention, and hitbox insets per the integration spec.
 public sealed class BikeController

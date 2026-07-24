@@ -6,7 +6,6 @@ using WPF_Motorcycle_Trip_Game.Services;
 
 namespace WPF_Motorcycle_Trip_Game.Core;
 
-// Owned by: Thai
 // Central game engine loop orchestrating timing, state transitions, physics updates,
 // collision detection, score management, and visual presentation.
 public sealed class GameEngine : IDisposable
@@ -131,8 +130,13 @@ public sealed class GameEngine : IDisposable
         }
 
         _bikeController.Update(deltaTime);
-        _obstacleManager.Update(deltaTime, GameConstants.BaseObstacleSpeed);
-        _visualManager.UpdateRoad(deltaTime, GameConstants.BaseObstacleSpeed);
+
+        double currentSpeed = GameConstants.BaseObstacleSpeed;
+        if (_scoreManager.Score >= 700) currentSpeed *= 1.4;
+        else if (_scoreManager.Score >= 400) currentSpeed *= 1.2;
+
+        _obstacleManager.Update(deltaTime, currentSpeed);
+        _visualManager.UpdateRoad(deltaTime, currentSpeed);
 
         // Immediate collision check to stop gameplay on impact.
         if (CollisionService.HasCollision(

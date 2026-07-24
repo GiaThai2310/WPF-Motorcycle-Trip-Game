@@ -8,7 +8,6 @@ using WPF_Motorcycle_Trip_Game.Managers;
 
 namespace WPF_Motorcycle_Trip_Game;
 
-// Owned by: Thai
 // Main WPF Window code-behind initializing engine subsystems, keyboard bindings, and window events.
 public partial class MainWindow : Window
 {

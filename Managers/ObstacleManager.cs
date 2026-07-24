@@ -8,7 +8,6 @@ using WPF_Motorcycle_Trip_Game.Models;
 
 namespace WPF_Motorcycle_Trip_Game.Managers;
 
-// Owned by: Vinh
 // Manages distance-based spawning, leftward translation, and cleanup of active obstacle entities.
 public sealed class ObstacleManager
 {
@@ -74,9 +73,13 @@ public sealed class ObstacleManager
 
     private void SpawnObstacle()
     {
-        // Randomly pick one of the 3 obstacle types: Pedestrian, Pothole, Rock
-        Array types = Enum.GetValues(typeof(ObstacleType));
-        ObstacleType randomType = (ObstacleType)types.GetValue(_random.Next(types.Length))!;
+        // 10% chance for UFO, 30% each for Pedestrian, Pothole, Rock
+        ObstacleType randomType;
+        int roll = _random.Next(100);
+        if (roll < 10) randomType = ObstacleType.Ufo;
+        else if (roll < 40) randomType = ObstacleType.Pedestrian;
+        else if (roll < 70) randomType = ObstacleType.Pothole;
+        else randomType = ObstacleType.Rock;
 
         double spawnX = _gameCanvas.ActualWidth > 0 ? _gameCanvas.ActualWidth : GameConstants.WindowWidth;
         Obstacle obstacle = new Obstacle(randomType, spawnX);
