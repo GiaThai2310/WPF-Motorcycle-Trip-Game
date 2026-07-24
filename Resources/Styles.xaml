@@ -1,0 +1,67 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <!-- Style cho văn bản Điểm số -->
+    <Style x:Key="ScoreTextStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI, Lucida Console, Arial" />
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="#F8FAFC" />
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect BlurRadius="4" ShadowDepth="2" Direction="315" Color="Black" Opacity="0.5"/>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Style cho văn bản thông báo giữa màn hình -->
+    <Style x:Key="MessageTextStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI, Impact, Arial" />
+        <Setter Property="FontSize" Value="32" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="#F8FAFC" />
+        <Setter Property="TextAlignment" Value="Center" />
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect BlurRadius="6" ShadowDepth="3" Direction="315" Color="Black" Opacity="0.6"/>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Style cho Nút chơi lại bo góc hiện đại -->
+    <Style x:Key="RestartButtonStyle" TargetType="Button">
+        <Setter Property="FontFamily" Value="Segoe UI, Arial" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border"
+                            Background="#EF4444"
+                            BorderBrush="#DC2626"
+                            BorderThickness="2"
+                            CornerRadius="8"
+                            SnapsToDevicePixels="true">
+                        <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          RecognizesAccessKey="True" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <!-- Hiệu ứng di chuột qua (Hover) -->
+                        <Trigger Property="IsMouseOver" Value="true">
+                            <Setter TargetName="border" Property="Background" Value="#DC2626" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="#B91C1C" />
+                        </Trigger>
+                        <!-- Hiệu ứng nhấn nút (Pressed) -->
+                        <Trigger Property="IsPressed" Value="true">
+                            <Setter TargetName="border" Property="Background" Value="#991B1B" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="#7F1D1D" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

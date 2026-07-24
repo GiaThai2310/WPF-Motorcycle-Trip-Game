@@ -11,6 +11,7 @@ public static class GameConstants
     public const double JumpVelocity = -650;
     public const double Gravity = 1800;
     public const double BaseObstacleSpeed = 360;
+    public const double RoadHeight = WindowHeight - GroundY;
     public const int TargetScore = 1000;
     public const double ScorePerSecond = 25;
     public const double MinimumSpawnGap = 320;
