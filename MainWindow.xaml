@@ -9,6 +9,8 @@
         Height="{x:Static core:GameConstants.WindowHeight}"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
         KeyDown="OnWindowKeyDown"
         Closed="OnWindowClosed">
     <Canvas x:Name="GameCanvas" Background="#87CEEB">
