@@ -57,6 +57,16 @@ public sealed class GameEngine : IDisposable
     public void Jump()
     {
         ThrowIfDisposed();
+
+        // Space / Up double as a restart shortcut from terminal states.
+        // After Restart(), State becomes Waiting, so the blocks below fire
+        // in sequence: Start() transitions to Running, then Jump() launches
+        // the bike — giving the player an instant new run.
+        if (State == GameState.GameOver || State == GameState.Victory)
+        {
+            Restart();
+        }
+
         if (State == GameState.Waiting)
         {
             Start();

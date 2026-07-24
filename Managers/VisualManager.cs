@@ -35,16 +35,16 @@ public sealed class VisualManager
 
     public void ShowGameOver(int score)
     {
-        _messageText.Text = $"Game Over — Score: {score}";
+        _messageText.Text = $"Game Over — Score: {score}\nPress Space or ↑ to restart";
         _messageText.Visibility = Visibility.Visible;
-        _restartButton.Visibility = Visibility.Visible;
+        _restartButton.Visibility = Visibility.Collapsed;
     }
 
     public void ShowVictory()
     {
-        _messageText.Text = "Victory!";
+        _messageText.Text = "Victory!\nPress Space or ↑ to restart";
         _messageText.Visibility = Visibility.Visible;
-        _restartButton.Visibility = Visibility.Visible;
+        _restartButton.Visibility = Visibility.Collapsed;
     }
 
     public void UpdateScore(int score) => _scoreText.Text = $"Score: {score}";

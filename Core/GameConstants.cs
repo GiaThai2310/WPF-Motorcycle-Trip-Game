@@ -6,8 +6,8 @@ public static class GameConstants
     public const double WindowHeight = 450;
     public const double GroundY = 330;
     public const double BikeStartX = 120;
-    public const double BikeWidth = 120;
-    public const double BikeHeight = 80;
+    public const double BikeWidth = 90;
+    public const double BikeHeight = 60;
     public const double JumpVelocity = -650;
     public const double Gravity = 1800;
     public const double BaseObstacleSpeed = 360;

@@ -15,8 +15,8 @@
                    Fill="#3F3F46" />
 
         <Image x:Name="BikeImage"
-               Width="120"
-               Height="80"
+               Width="90"
+               Height="60"
                Stretch="Uniform" />
 
         <TextBlock x:Name="ScoreText"
