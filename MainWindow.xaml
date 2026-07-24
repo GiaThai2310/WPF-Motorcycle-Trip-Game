@@ -1,4 +1,4 @@
-<!-- Owned by: Van -->
+<!-- Owned by: Quan -->
 <!-- Main WPF game window view defining canvas layers, asset images, score display, and message overlay -->
 <Window x:Class="WPF_Motorcycle_Trip_Game.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -57,14 +57,14 @@
         <TextBlock x:Name="MessageText"
                    Style="{StaticResource MessageTextStyle}"
                    Canvas.Left="0"
-                   Canvas.Top="120"
+                   Canvas.Top="110"
                    Width="{x:Static core:GameConstants.WindowWidth}" />
 
         <!-- Restart button overlay -->
         <Button x:Name="RestartButton"
                 Style="{StaticResource RestartButtonStyle}"
                 Canvas.Left="440"
-                Canvas.Top="185"
+                Canvas.Top="220"
                 Width="120"
                 Height="40"
                 Content="Restart"
