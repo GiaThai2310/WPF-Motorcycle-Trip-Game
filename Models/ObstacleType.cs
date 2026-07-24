@@ -1,8 +1,10 @@
 namespace WPF_Motorcycle_Trip_Game.Models;
 
+// Owned by: Vinh
+// Enumeration of supported obstacle types spawned during gameplay.
 public enum ObstacleType
 {
-    Pedestrian, // Học sinh sang đường (Student)
-    Pothole,    // Ổ gà sâu (Pothole)
-    Rock        // Tảng đá chướng ngại (Rock)
+    Pedestrian, // Student crossing road
+    Pothole,    // Road surface indentation
+    Rock        // Roadside rock or brick pile
 }

@@ -6,6 +6,9 @@ using WPF_Motorcycle_Trip_Game.Services;
 
 namespace WPF_Motorcycle_Trip_Game.Core;
 
+// Owned by: Thai
+// Central game engine loop orchestrating timing, state transitions, physics updates,
+// collision detection, score management, and visual presentation.
 public sealed class GameEngine : IDisposable
 {
     private const double MaximumDeltaTime = 0.1;
@@ -27,6 +30,8 @@ public sealed class GameEngine : IDisposable
         _obstacleManager = obstacleManager;
         _scoreManager = scoreManager;
         _visualManager = visualManager;
+
+        // Configure high-priority render timer running at approximately 60 FPS (16ms interval).
         _gameTimer = new DispatcherTimer(DispatcherPriority.Render)
         {
             Interval = TimeSpan.FromMilliseconds(16)
@@ -38,8 +43,10 @@ public sealed class GameEngine : IDisposable
         _visualManager.ShowWaiting();
     }
 
+    // Current state of the game loop (Waiting, Running, GameOver, Victory).
     public GameState State { get; private set; }
 
+    // Starts the game loop from the Waiting state.
     public void Start()
     {
         ThrowIfDisposed();
@@ -54,13 +61,12 @@ public sealed class GameEngine : IDisposable
         _gameTimer.Start();
     }
 
+    // Handles the jump control key press; automatically restarts if called from terminal states.
     public void Jump()
     {
         ThrowIfDisposed();
 
-        // Allow Space or Up to quickly restart the game when it's over or won.
-        // Calling Restart() sets the state back to Waiting, which seamlessly triggers
-        // the rest of the flow below (Starting the game and immediately jumping).
+        // Allow Space or Up to restart the game when it's over or won.
         if (State == GameState.GameOver || State == GameState.Victory)
         {
             Restart();
@@ -77,6 +83,7 @@ public sealed class GameEngine : IDisposable
         }
     }
 
+    // Resets all subsystems and returns the engine state to Waiting.
     public void Restart()
     {
         ThrowIfDisposed();
@@ -90,6 +97,7 @@ public sealed class GameEngine : IDisposable
         _visualManager.ShowWaiting();
     }
 
+    // Stops and detaches the game loop timer upon application shutdown.
     public void Dispose()
     {
         if (_disposed)
@@ -103,6 +111,11 @@ public sealed class GameEngine : IDisposable
         _disposed = true;
     }
 
+    // Per-frame game loop handler calculating delta time and evaluating updates in strict order:
+    // 1. Motorcycle physics and obstacle movement
+    // 2. Scrolling background elements
+    // 3. Collision detection (triggers GameOver before score accumulation)
+    // 4. Score accumulation and Victory condition evaluation
     private void OnGameTick(object? sender, EventArgs e)
     {
         if (State != GameState.Running)
@@ -119,7 +132,9 @@ public sealed class GameEngine : IDisposable
 
         _bikeController.Update(deltaTime);
         _obstacleManager.Update(deltaTime, GameConstants.BaseObstacleSpeed);
+        _visualManager.UpdateRoad(deltaTime, GameConstants.BaseObstacleSpeed);
 
+        // Immediate collision check to stop gameplay on impact.
         if (CollisionService.HasCollision(
                 _bikeController.Bounds,
                 _obstacleManager.ObstacleBounds))

@@ -8,6 +8,8 @@ using WPF_Motorcycle_Trip_Game.Managers;
 
 namespace WPF_Motorcycle_Trip_Game;
 
+// Owned by: Thai
+// Main WPF Window code-behind initializing engine subsystems, keyboard bindings, and window events.
 public partial class MainWindow : Window
 {
     private readonly GameEngine _gameEngine;
@@ -16,20 +18,21 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        // Inject a fallback procedural vector drawing if the actual image hasn't been added yet,
-        // so the game is still playable for testing.
+        // Inject fallback vector drawing if graphic asset is missing.
         if (BikeImage.Source == null)
         {
             BikeImage.Source = BuildBikeFallbackImage();
         }
 
+        // Initialize game engine orchestrator with concrete subsystem instances.
         _gameEngine = new GameEngine(
             new BikeController(BikeImage),
             new ObstacleManager(GameCanvas),
             new ScoreManager(),
-            new VisualManager(ScoreText, MessageText, RestartButton));
+            new VisualManager(ScoreText, MessageText, RestartButton, RoadImage1, RoadImage2));
     }
 
+    // Key input router for Space/Up (Jump/Start/Restart) and R (Restart).
     private void OnWindowKeyDown(object sender, KeyEventArgs e)
     {
         switch (e.Key)
@@ -47,12 +50,14 @@ public partial class MainWindow : Window
         }
     }
 
+    // On-screen restart button handler.
     private void OnRestartClick(object sender, RoutedEventArgs e)
     {
         _gameEngine.Restart();
         Keyboard.Focus(this);
     }
 
+    // Window closed handler ensuring proper disposal of timer resources.
     private void OnWindowClosed(object? sender, EventArgs e)
     {
         _gameEngine.Dispose();

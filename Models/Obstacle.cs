@@ -9,6 +9,8 @@ using WPF_Motorcycle_Trip_Game.Core;
 
 namespace WPF_Motorcycle_Trip_Game.Models;
 
+// Owned by: Vinh
+// Defines individual obstacle dimensions, visual elements, animations, and tight hitboxes.
 public sealed class Obstacle
 {
     private static readonly Random SharedRandom = new();

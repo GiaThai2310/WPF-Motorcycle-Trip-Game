@@ -1,5 +1,7 @@
 namespace WPF_Motorcycle_Trip_Game.Core;
 
+// Owned by: Thai
+// Global configuration parameters and constants for layout, physics, and gameplay rules.
 public static class GameConstants
 {
     public const double WindowWidth = 1000;

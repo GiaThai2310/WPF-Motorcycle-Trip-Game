@@ -8,6 +8,8 @@ using WPF_Motorcycle_Trip_Game.Models;
 
 namespace WPF_Motorcycle_Trip_Game.Managers;
 
+// Owned by: Vinh
+// Manages distance-based spawning, leftward translation, and cleanup of active obstacle entities.
 public sealed class ObstacleManager
 {
     private readonly Canvas _gameCanvas;
@@ -21,6 +23,7 @@ public sealed class ObstacleManager
         Reset();
     }
 
+    // Returns collection of bounding rectangles for all active obstacles on screen.
     public IReadOnlyList<Rect> ObstacleBounds => _obstacles.Select(o => o.Bounds).ToList();
 
     public void Update(double deltaTime, double speed)
