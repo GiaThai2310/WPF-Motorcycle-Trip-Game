@@ -9,10 +9,11 @@ namespace WPF_Motorcycle_Trip_Game.Controllers;
 // double-jump prevention, and hitbox insets per the integration spec.
 public sealed class BikeController
 {
-    // The ground rest position for the TOP of the bike element (in canvas coordinates).
-    // Canvas Y increases downward, so the bike's top edge at rest = GroundY - BikeHeight.
+    // Calculating the ground rest position for the TOP of the motorcycle image.
+    // Since the Canvas Y coordinate increases downwards, the bike's top edge when resting
+    // is simply the ground level minus its height.
     private static readonly double RestY =
-        GameConstants.GroundY - GameConstants.BikeHeight; // 330 - 80 = 250
+        GameConstants.GroundY - GameConstants.BikeHeight;
 
     private readonly FrameworkElement _bikeElement;
 
@@ -37,51 +38,54 @@ public sealed class BikeController
     public bool IsGrounded => _isGrounded;
 
     /// <summary>
-    /// Hitbox rectangle in canvas coordinates, with insets per the task sheet:
-    ///   Left +10, Top +10, Right -12, Bottom -8
-    /// so the hitbox is slightly smaller than the image, making collisions feel fair.
+    /// Gets the hitbox rectangle for collision detection.
+    /// To make the game feel fair and prevent frustrating deaths, the hitbox is slightly
+    /// smaller than the actual image (insets: Left +10, Top +10, Right -12, Bottom -8).
     /// </summary>
     public Rect Bounds => new(
         GameConstants.BikeStartX + 10,
         _currentY + 10,
-        GameConstants.BikeWidth - 22,   // 120 - 10 - 12
-        GameConstants.BikeHeight - 18); // 80  - 10 -  8
+        GameConstants.BikeWidth - 22,
+        GameConstants.BikeHeight - 18);
 
     /// <summary>
-    /// Initiates a jump if the bike is currently grounded.
-    /// Called by GameEngine when Space or Up is pressed while Running.
+    /// Triggers the jump action. This checks if the motorcycle is already in the air
+    /// to prevent double-jumping. If grounded, it applies the initial upward velocity.
     /// </summary>
     public void Jump()
     {
+        // Don't allow jumping if already in the air.
         if (!_isGrounded)
         {
-            return; // Silently ignore double-jump attempts.
+            return;
         }
 
-        _velocityY = GameConstants.JumpVelocity; // -650 px/s (upward)
+        // Apply the upward force. Negative velocity moves the object UP on the canvas.
+        _velocityY = GameConstants.JumpVelocity;
         _isGrounded = false;
     }
 
     /// <summary>
-    /// Advances the bike physics by one frame.
-    /// Called by GameEngine every tick while state is Running.
+    /// Updates the motorcycle's physics for the current frame.
+    /// Applies gravity over time and updates the vertical position, making sure
+    /// the bike lands perfectly on the road.
     /// </summary>
     public void Update(double deltaTime)
     {
         if (_isGrounded)
         {
-            // Bike is resting; nothing to integrate.
+            // No physics calculations needed if we are just driving on the road.
             return;
         }
 
-        // Apply gravity (positive = accelerates downward).
-        _velocityY += GameConstants.Gravity * deltaTime; // 1800 px/s²
+        // Gravity constantly pulls the bike downwards.
+        _velocityY += GameConstants.Gravity * deltaTime;
 
-        // Integrate position.
+        // Update the current Y position based on velocity.
         _currentY += _velocityY * deltaTime;
 
-        // Clamp to ground: if the bike has reached or passed the road surface,
-        // snap it exactly to the rest position and stop vertical motion.
+        // Collision check with the ground. If the bike falls below the ground level,
+        // snap it back to the road surface, kill the vertical momentum, and mark as grounded.
         if (_currentY >= RestY)
         {
             _currentY = RestY;
@@ -89,6 +93,7 @@ public sealed class BikeController
             _isGrounded = true;
         }
 
+        // Apply the new position to the UI element.
         Canvas.SetTop(_bikeElement, _currentY);
     }
 

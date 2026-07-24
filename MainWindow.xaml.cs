@@ -16,8 +16,8 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        // If no PNG asset was loaded by XAML (Assets/motorcycle.png not yet present),
-        // inject a procedural vector drawing so the bike is always visible during testing.
+        // Inject a fallback procedural vector drawing if the actual image hasn't been added yet,
+        // so the game is still playable for testing.
         if (BikeImage.Source == null)
         {
             BikeImage.Source = BuildBikeFallbackImage();
@@ -59,9 +59,10 @@ public partial class MainWindow : Window
     }
 
     // -------------------------------------------------------------------------
-    // Procedural motorcycle fallback drawing (120 × 80 px, side view, faces right).
-    // Rendered once at startup and frozen as an immutable DrawingImage.
-    // Remove this method (and the null-check above) once Assets/motorcycle.png exists.
+    // Fallback procedural motorcycle drawing. 
+    // This creates a static vector image of a motorcycle at startup.
+    // This whole method and the call in the constructor can be deleted once 
+    // the final motorcycle graphic is integrated.
     // -------------------------------------------------------------------------
     private static ImageSource BuildBikeFallbackImage()
     {
