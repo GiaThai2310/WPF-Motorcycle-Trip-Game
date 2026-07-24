@@ -2,7 +2,6 @@ using System.Windows;
 
 namespace WPF_Motorcycle_Trip_Game.Services;
 
-// Owned by: Dang
 // Provides static bounding-box intersection evaluation between motorcycle and active obstacles.
 public static class CollisionService
 {

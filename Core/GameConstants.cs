@@ -1,6 +1,5 @@
 namespace WPF_Motorcycle_Trip_Game.Core;
 
-// Owned by: Thai
 // Global configuration parameters and constants for layout, physics, and gameplay rules.
 public static class GameConstants
 {
@@ -15,7 +14,7 @@ public static class GameConstants
     public const double BaseObstacleSpeed = 360;
     public const double RoadHeight = WindowHeight - GroundY;
     public const int TargetScore = 1000;
-    public const double ScorePerSecond = 25;
-    public const double MinimumSpawnGap = 320;
-    public const double MaximumSpawnGap = 560;
+    public const double ScorePerSecond = 20;
+    public const double MinimumSpawnGap = 400;
+    public const double MaximumSpawnGap = 700;
 }

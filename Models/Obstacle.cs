@@ -9,7 +9,6 @@ using WPF_Motorcycle_Trip_Game.Core;
 
 namespace WPF_Motorcycle_Trip_Game.Models;
 
-// Owned by: Vinh
 // Defines individual obstacle dimensions, visual elements, animations, and tight hitboxes.
 public sealed class Obstacle
 {
@@ -29,8 +28,9 @@ public sealed class Obstacle
             return Type switch
             {
                 ObstacleType.Pedestrian => new Rect(X + 6, Y + 5, Width - 12, Height - 7),
-                ObstacleType.Pothole   => new Rect(X + 4, Y + 2, Width - 8, Height - 4),
+                ObstacleType.Pothole   => new Rect(X + 4, GameConstants.GroundY - 14, Width - 8, 20),
                 ObstacleType.Rock      => new Rect(X + 5, Y + 5, Width - 10, Height - 7),
+                ObstacleType.Ufo       => new Rect(X + 5, Y + 5, Width - 10, Height - 10),
                 _                      => new Rect(X, Y, Width, Height)
             };
         }
@@ -55,6 +55,12 @@ public sealed class Obstacle
                 Y = GameConstants.GroundY - 4; // Embedded IN the road surface, mostly below ground
                 break;
 
+            case ObstacleType.Ufo:
+                Width = 60;
+                Height = 30;
+                Y = 210; // Hovers at Y=210. Bottom bounds = 240. Grounded bike top bounds = 260.
+                break;
+
             case ObstacleType.Rock:
             default:
                 Width = 50;
@@ -63,7 +69,7 @@ public sealed class Obstacle
                 break;
         }
 
-        VisualElement = TryLoadAsset() ?? CreateFallbackVisual();
+        VisualElement = CreateVisual();
 
         Canvas.SetLeft(VisualElement, X);
         Canvas.SetTop(VisualElement, Y);
@@ -71,10 +77,7 @@ public sealed class Obstacle
         ApplyAnimation();
     }
 
-    /// <summary>
-    /// Applies subtle WPF Storyboard animations to make obstacles feel alive.
-    /// Uses WPF's built-in composition engine — does NOT create a DispatcherTimer.
-    /// </summary>
+    // Applies subtle composition-based WPF animations to pedestrian and cone obstacles.
     private void ApplyAnimation()
     {
         if (VisualElement is not FrameworkElement element) return;
@@ -82,7 +85,7 @@ public sealed class Obstacle
         switch (Type)
         {
             case ObstacleType.Pedestrian:
-                // Walking bob: gentle up-down oscillation (simulates walking motion)
+                // Applies walking bob animation simulating pedestrian step movement.
                 TranslateTransform walkTransform = new TranslateTransform();
                 element.RenderTransform = walkTransform;
 
@@ -99,8 +102,7 @@ public sealed class Obstacle
                 break;
 
             case ObstacleType.Rock:
-                // Only animate traffic cone (wobble) — rocks and bricks stay static
-                // We detect cone by checking if the visual contains a Polygon (cone shape)
+                // Applies gentle wobble animation to traffic cone variants.
                 if (element is Canvas rockCanvas && rockCanvas.Children.Count > 0
                     && rockCanvas.Children[0] is Polygon)
                 {
@@ -122,22 +124,54 @@ public sealed class Obstacle
         }
     }
 
+    // Updates left canvas position of visual element.
     public void UpdatePosition(double newX)
     {
         X = newX;
         Canvas.SetLeft(VisualElement, X);
     }
 
-    private UIElement? TryLoadAsset()
+    // Randomly constructs visual presentation using asset images or custom vector variants.
+    private UIElement CreateVisual()
     {
-        string assetName = Type switch
+        switch (Type)
         {
-            ObstacleType.Pedestrian => "pedestrian.png",
-            ObstacleType.Pothole   => "pothole.png",
-            ObstacleType.Rock      => "rock.png",
-            _                      => ""
-        };
+            case ObstacleType.Pedestrian:
+                // Randomly selects 1 of 4 pedestrian variants, prioritizing newly generated image assets over code fallbacks.
+                int pedVariant = SharedRandom.Next(4);
+                if (pedVariant == 0) return TryLoadAsset("pedestrian.png") ?? BuildFptStudentVisual();
+                if (pedVariant == 1) return TryLoadAsset("fpt_student.png") ?? BuildFptStudentVisual();
+                if (pedVariant == 2) return TryLoadAsset("ronaldo.png") ?? BuildRonaldoVisual();
+                return TryLoadAsset("messi.png") ?? BuildMessiVisual();
 
+            case ObstacleType.Rock:
+                // Randomly selects 1 of 4 rock visual render variants: PNG asset, Boulder, Brick Pile, or Traffic Cone.
+                int rockVariant = SharedRandom.Next(4);
+                if (rockVariant == 0)
+                {
+                    UIElement? pngVisual = TryLoadAsset("rock.png");
+                    if (pngVisual != null) return pngVisual;
+                }
+                return (rockVariant % 3) switch
+                {
+                    0 => BuildRockVisual(),
+                    1 => BuildBrickPileVisual(),
+                    _ => BuildTrafficConeVisual()
+                };
+
+            case ObstacleType.Ufo:
+                return BuildUfoVisual();
+
+            case ObstacleType.Pothole:
+            default:
+                // Attempts loading pothole PNG asset first, falling back to embedded pothole vector visual.
+                return TryLoadAsset("pothole.png") ?? BuildPotholeVisual();
+        }
+    }
+
+    // Attempts loading a PNG bitmap asset from application pack resources.
+    private UIElement? TryLoadAsset(string assetName)
+    {
         try
         {
             string uri = $"pack://application:,,,/Assets/{assetName}";
@@ -154,7 +188,7 @@ public sealed class Obstacle
                 Source = bitmap,
                 Width = Width,
                 Height = Height,
-                Stretch = Stretch.Uniform
+                Stretch = Stretch.Fill
             };
         }
         catch
@@ -163,33 +197,14 @@ public sealed class Obstacle
         }
     }
 
-    private UIElement CreateFallbackVisual()
-    {
-        return Type switch
-        {
-            ObstacleType.Pedestrian => SharedRandom.Next(3) switch
-            {
-                0 => BuildFptStudentVisual(),
-                1 => BuildRonaldoSiuuuVisual(),
-                _ => BuildMessiVisual()
-            },
-            ObstacleType.Pothole => BuildPotholeVisual(),
-            ObstacleType.Rock => SharedRandom.Next(3) switch
-            {
-                0 => BuildRockVisual(),
-                1 => BuildBrickPileVisual(),
-                _ => BuildTrafficConeVisual()
-            },
-            _ => BuildRockVisual()
-        };
-    }
-
     // ========================================================================
     // PEDESTRIAN VARIANT 1: FPT University Student (Áo cam FPT đeo balo)
     // ========================================================================
     private UIElement BuildFptStudentVisual()
     {
         Canvas canvas = new Canvas { Width = Width, Height = Height };
+        RenderOptions.SetEdgeMode(canvas, EdgeMode.Aliased);
+        RenderOptions.SetBitmapScalingMode(canvas, BitmapScalingMode.NearestNeighbor);
 
         SolidColorBrush skin = new SolidColorBrush(Color.FromRgb(255, 219, 172));
         SolidColorBrush hairBrush = new SolidColorBrush(Color.FromRgb(40, 30, 20));
@@ -197,127 +212,147 @@ public sealed class Obstacle
         SolidColorBrush fptOrangeDark = new SolidColorBrush(Color.FromRgb(200, 85, 20));
         SolidColorBrush pants = new SolidColorBrush(Color.FromRgb(40, 45, 55));
         SolidColorBrush backpackBrush = new SolidColorBrush(Color.FromRgb(50, 50, 55));
-        SolidColorBrush shoe = new SolidColorBrush(Color.FromRgb(35, 35, 35));
+        SolidColorBrush shoe = new SolidColorBrush(Color.FromRgb(240, 240, 240));
 
         double cx = Width / 2.0;
 
-        // Hair
-        Ellipse hair = new Ellipse { Width = 16, Height = 10, Fill = hairBrush };
+        // Pixel-art Hair block
+        Rectangle hair = new Rectangle { Width = 16, Height = 8, Fill = hairBrush };
         Canvas.SetLeft(hair, cx - 8);
         Canvas.SetTop(hair, 0);
         canvas.Children.Add(hair);
 
-        // Head
-        Ellipse head = new Ellipse
-        {
-            Width = 14, Height = 14, Fill = skin,
-            Stroke = new SolidColorBrush(Color.FromRgb(200, 170, 130)), StrokeThickness = 0.5
-        };
+        // Pixel-art Head block
+        Rectangle head = new Rectangle { Width = 14, Height = 14, Fill = skin };
         Canvas.SetLeft(head, cx - 7);
-        Canvas.SetTop(head, 2);
+        Canvas.SetTop(head, 4);
         canvas.Children.Add(head);
 
-        // Neck
-        Rectangle neck = new Rectangle { Width = 4, Height = 4, Fill = skin };
+        // Pixel-art Neck
+        Rectangle neck = new Rectangle { Width = 4, Height = 3, Fill = skin };
         Canvas.SetLeft(neck, cx - 2);
-        Canvas.SetTop(neck, 15);
+        Canvas.SetTop(neck, 18);
         canvas.Children.Add(neck);
 
-        // FPT Orange Polo Shirt
-        Rectangle torso = new Rectangle
-        {
-            Width = 18, Height = 20, Fill = fptOrange,
-            Stroke = fptOrangeDark, StrokeThickness = 0.8,
-            RadiusX = 2, RadiusY = 2
-        };
+        // FPT Orange Polo Shirt (pixel block)
+        Rectangle torso = new Rectangle { Width = 18, Height = 22, Fill = fptOrange };
         Canvas.SetLeft(torso, cx - 9);
-        Canvas.SetTop(torso, 18);
+        Canvas.SetTop(torso, 21);
         canvas.Children.Add(torso);
 
-        // "FPT" text on shirt
+        // Dark collar trim (pixel block)
+        Rectangle collar = new Rectangle { Width = 8, Height = 3, Fill = fptOrangeDark };
+        Canvas.SetLeft(collar, cx - 4);
+        Canvas.SetTop(collar, 21);
+        canvas.Children.Add(collar);
+
+        // "FPT" pixel badge text
         TextBlock fptLabel = new TextBlock
         {
             Text = "FPT",
-            FontSize = 6, FontWeight = FontWeights.Bold,
-            Foreground = Brushes.White
+            FontSize = 7, FontWeight = FontWeights.ExtraBold,
+            Foreground = Brushes.White,
+            FontFamily = new FontFamily("Segoe UI")
         };
         Canvas.SetLeft(fptLabel, cx - 7);
-        Canvas.SetTop(fptLabel, 23);
+        Canvas.SetTop(fptLabel, 26);
         canvas.Children.Add(fptLabel);
 
-        // Polo collar
-        Polygon collar = new Polygon
-        {
-            Points = new PointCollection
-            {
-                new Point(cx - 4, 18), new Point(cx, 21), new Point(cx + 4, 18)
-            },
-            Fill = new SolidColorBrush(Color.FromRgb(255, 140, 60)),
-            Stroke = fptOrangeDark, StrokeThickness = 0.5
-        };
-        canvas.Children.Add(collar);
-
-        // Backpack
-        Rectangle bag = new Rectangle
-        {
-            Width = 10, Height = 16, Fill = backpackBrush,
-            Stroke = new SolidColorBrush(Color.FromRgb(30, 30, 35)),
-            StrokeThickness = 0.5, RadiusX = 2, RadiusY = 2
-        };
+        // Backpack (pixel block)
+        Rectangle bag = new Rectangle { Width = 8, Height = 18, Fill = backpackBrush };
         Canvas.SetLeft(bag, cx + 6);
-        Canvas.SetTop(bag, 20);
+        Canvas.SetTop(bag, 23);
         canvas.Children.Add(bag);
 
-        // Backpack strap
-        canvas.Children.Add(new Line
-        {
-            X1 = cx + 6, Y1 = 21, X2 = cx + 3, Y2 = 19,
-            Stroke = backpackBrush, StrokeThickness = 1.5
-        });
+        // Left arm (pixel block)
+        Rectangle leftArm = new Rectangle { Width = 4, Height = 16, Fill = skin };
+        Canvas.SetLeft(leftArm, cx - 13);
+        Canvas.SetTop(leftArm, 23);
+        canvas.Children.Add(leftArm);
 
-        // Left arm (swinging back)
-        canvas.Children.Add(new Line
-        {
-            X1 = cx - 8, Y1 = 20, X2 = cx - 13, Y2 = 35,
-            Stroke = skin, StrokeThickness = 3,
-            StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round
-        });
+        // Right arm (pixel block)
+        Rectangle rightArm = new Rectangle { Width = 4, Height = 16, Fill = skin };
+        Canvas.SetLeft(rightArm, cx + 9);
+        Canvas.SetTop(rightArm, 23);
+        canvas.Children.Add(rightArm);
 
-        // Right arm (swinging forward)
-        canvas.Children.Add(new Line
-        {
-            X1 = cx + 8, Y1 = 20, X2 = cx + 5, Y2 = 36,
-            Stroke = skin, StrokeThickness = 3,
-            StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round
-        });
+        // Pixel-art Pants (legs blocks)
+        Rectangle leftLeg = new Rectangle { Width = 6, Height = 22, Fill = pants };
+        Canvas.SetLeft(leftLeg, cx - 8);
+        Canvas.SetTop(leftLeg, 43);
+        canvas.Children.Add(leftLeg);
 
-        // Left leg (stepping forward)
-        canvas.Children.Add(new Line
-        {
-            X1 = cx - 4, Y1 = 38, X2 = cx - 10, Y2 = 61,
-            Stroke = pants, StrokeThickness = 4,
-            StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round
-        });
+        Rectangle rightLeg = new Rectangle { Width = 6, Height = 22, Fill = pants };
+        Canvas.SetLeft(rightLeg, cx + 2);
+        Canvas.SetTop(rightLeg, 43);
+        canvas.Children.Add(rightLeg);
 
-        // Right leg (stepping back)
-        canvas.Children.Add(new Line
-        {
-            X1 = cx + 4, Y1 = 38, X2 = cx + 8, Y2 = 60,
-            Stroke = pants, StrokeThickness = 4,
-            StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round
-        });
-
-        // Left shoe — touching bottom
-        Rectangle leftShoe = new Rectangle { Width = 9, Height = 5, Fill = shoe, RadiusX = 2, RadiusY = 2 };
-        Canvas.SetLeft(leftShoe, cx - 14);
-        Canvas.SetTop(leftShoe, Height - 6);
+        // Pixel-art Sneakers
+        Rectangle leftShoe = new Rectangle { Width = 8, Height = 5, Fill = shoe };
+        Canvas.SetLeft(leftShoe, cx - 10);
+        Canvas.SetTop(leftShoe, Height - 5);
         canvas.Children.Add(leftShoe);
 
-        // Right shoe — touching bottom
-        Rectangle rightShoe = new Rectangle { Width = 9, Height = 5, Fill = shoe, RadiusX = 2, RadiusY = 2 };
-        Canvas.SetLeft(rightShoe, cx + 5);
-        Canvas.SetTop(rightShoe, Height - 7);
+        Rectangle rightShoe = new Rectangle { Width = 8, Height = 5, Fill = shoe };
+        Canvas.SetLeft(rightShoe, cx + 2);
+        Canvas.SetTop(rightShoe, Height - 5);
         canvas.Children.Add(rightShoe);
+
+        return canvas;
+    }
+
+    private UIElement BuildUfoVisual()
+    {
+        Canvas canvas = new Canvas { Width = Width, Height = Height };
+        RenderOptions.SetEdgeMode(canvas, EdgeMode.Aliased);
+        RenderOptions.SetBitmapScalingMode(canvas, BitmapScalingMode.NearestNeighbor);
+
+        SolidColorBrush metalBase = new SolidColorBrush(Color.FromRgb(150, 160, 170));
+        SolidColorBrush metalDark = new SolidColorBrush(Color.FromRgb(100, 110, 120));
+        SolidColorBrush glass = new SolidColorBrush(Color.FromRgb(120, 220, 255));
+        SolidColorBrush lightGreen = new SolidColorBrush(Color.FromRgb(0, 255, 100));
+
+        // Glass Dome (pixel blocks)
+        Rectangle dome = new Rectangle { Width = 24, Height = 12, Fill = glass };
+        Canvas.SetLeft(dome, 18);
+        Canvas.SetTop(dome, 0);
+        canvas.Children.Add(dome);
+
+        Rectangle domeTop = new Rectangle { Width = 16, Height = 4, Fill = glass };
+        Canvas.SetLeft(domeTop, 22);
+        Canvas.SetTop(domeTop, -4);
+        canvas.Children.Add(domeTop);
+
+        // Alien Silhouette inside dome
+        Rectangle alien = new Rectangle { Width = 8, Height = 8, Fill = new SolidColorBrush(Color.FromRgb(50, 150, 50)) };
+        Canvas.SetLeft(alien, 26);
+        Canvas.SetTop(alien, 4);
+        canvas.Children.Add(alien);
+
+        // Saucer Metal Body (pixel blocks)
+        Rectangle saucerTop = new Rectangle { Width = 40, Height = 6, Fill = metalBase };
+        Canvas.SetLeft(saucerTop, 10);
+        Canvas.SetTop(saucerTop, 12);
+        canvas.Children.Add(saucerTop);
+
+        Rectangle saucerMid = new Rectangle { Width = 56, Height = 8, Fill = metalDark };
+        Canvas.SetLeft(saucerMid, 2);
+        Canvas.SetTop(saucerMid, 18);
+        canvas.Children.Add(saucerMid);
+
+        Rectangle saucerBot = new Rectangle { Width = 32, Height = 4, Fill = metalBase };
+        Canvas.SetLeft(saucerBot, 14);
+        Canvas.SetTop(saucerBot, 26);
+        canvas.Children.Add(saucerBot);
+
+        // UFO Lights (green glowing pixel blocks)
+        for (int i = 0; i < 4; i++)
+        {
+            Rectangle light = new Rectangle { Width = 4, Height = 4, Fill = lightGreen };
+            Canvas.SetLeft(light, 8 + (i * 14));
+            Canvas.SetTop(light, 20);
+            canvas.Children.Add(light);
+        }
 
         return canvas;
     }
@@ -326,142 +361,97 @@ public sealed class Obstacle
     // PEDESTRIAN VARIANT 2: Cristiano Ronaldo — SIUUU celebration
     // Arms spread wide behind, legs apart, head back, #7 Portugal jersey
     // ========================================================================
-    private UIElement BuildRonaldoSiuuuVisual()
+    private UIElement BuildRonaldoVisual()
     {
         Canvas canvas = new Canvas { Width = Width, Height = Height };
+        RenderOptions.SetEdgeMode(canvas, EdgeMode.Aliased);
+        RenderOptions.SetBitmapScalingMode(canvas, BitmapScalingMode.NearestNeighbor);
 
         SolidColorBrush skin = new SolidColorBrush(Color.FromRgb(210, 170, 130));
         SolidColorBrush hairBrush = new SolidColorBrush(Color.FromRgb(30, 25, 18));
         SolidColorBrush jersey = new SolidColorBrush(Color.FromRgb(0, 100, 60));
-        SolidColorBrush jerseyAccent = new SolidColorBrush(Color.FromRgb(220, 30, 30));
         SolidColorBrush shorts = new SolidColorBrush(Color.FromRgb(0, 85, 50));
-        SolidColorBrush socks = new SolidColorBrush(Color.FromRgb(0, 100, 60));
         SolidColorBrush bootsBrush = new SolidColorBrush(Color.FromRgb(25, 25, 25));
 
         double cx = Width / 2.0;
 
-        // "SIUUU!" label above head
+        // "SIUUU!" pixel banner label
         TextBlock siuLabel = new TextBlock
         {
             Text = "SIUUU!",
-            FontSize = 7, FontWeight = FontWeights.ExtraBold,
+            FontSize = 8, FontWeight = FontWeights.ExtraBold,
             Foreground = new SolidColorBrush(Color.FromRgb(255, 215, 0)),
-            FontStyle = FontStyles.Italic
+            FontFamily = new FontFamily("Segoe UI")
         };
-        Canvas.SetLeft(siuLabel, cx - 13);
+        Canvas.SetLeft(siuLabel, cx - 14);
         Canvas.SetTop(siuLabel, 0);
         canvas.Children.Add(siuLabel);
 
-        // Hair (styled up)
-        Rectangle hairTop = new Rectangle { Width = 14, Height = 6, Fill = hairBrush, RadiusX = 3, RadiusY = 3 };
-        Canvas.SetLeft(hairTop, cx - 7);
-        Canvas.SetTop(hairTop, 10);
-        canvas.Children.Add(hairTop);
+        // Pixel-art Hair block
+        Rectangle hair = new Rectangle { Width = 14, Height = 6, Fill = hairBrush };
+        Canvas.SetLeft(hair, cx - 7);
+        Canvas.SetTop(hair, 10);
+        canvas.Children.Add(hair);
 
-        // Head (tilted back)
-        Ellipse head = new Ellipse
-        {
-            Width = 13, Height = 13, Fill = skin,
-            Stroke = new SolidColorBrush(Color.FromRgb(180, 140, 100)), StrokeThickness = 0.5
-        };
-        Canvas.SetLeft(head, cx - 6.5);
-        Canvas.SetTop(head, 13);
+        // Pixel-art Head block
+        Rectangle head = new Rectangle { Width = 14, Height = 14, Fill = skin };
+        Canvas.SetLeft(head, cx - 7);
+        Canvas.SetTop(head, 14);
         canvas.Children.Add(head);
 
-        // Mouth open (screaming SIUUU)
-        Ellipse mouth = new Ellipse
-        {
-            Width = 4, Height = 3,
-            Fill = new SolidColorBrush(Color.FromRgb(150, 50, 50))
-        };
-        Canvas.SetLeft(mouth, cx - 2);
-        Canvas.SetTop(mouth, 21);
-        canvas.Children.Add(mouth);
-
-        // Neck
-        Rectangle neck = new Rectangle { Width = 5, Height = 4, Fill = skin };
-        Canvas.SetLeft(neck, cx - 2.5);
-        Canvas.SetTop(neck, 25);
-        canvas.Children.Add(neck);
-
-        // Jersey (Portugal green #7)
-        Rectangle torso = new Rectangle
-        {
-            Width = 18, Height = 18, Fill = jersey,
-            Stroke = new SolidColorBrush(Color.FromRgb(0, 70, 40)),
-            StrokeThickness = 0.8, RadiusX = 2, RadiusY = 2
-        };
+        // Pixel-art Portugal #7 Jersey
+        Rectangle torso = new Rectangle { Width = 18, Height = 20, Fill = jersey };
         Canvas.SetLeft(torso, cx - 9);
         Canvas.SetTop(torso, 28);
         canvas.Children.Add(torso);
 
-        // #7 gold number
+        // #7 gold number on jersey
         TextBlock number = new TextBlock
         {
-            Text = "7", FontSize = 9, FontWeight = FontWeights.ExtraBold,
+            Text = "7", FontSize = 8, FontWeight = FontWeights.ExtraBold,
             Foreground = new SolidColorBrush(Color.FromRgb(255, 215, 0))
         };
         Canvas.SetLeft(number, cx - 3);
-        Canvas.SetTop(number, 30);
+        Canvas.SetTop(number, 32);
         canvas.Children.Add(number);
 
-        // Red collar accents
-        canvas.Children.Add(new Line { X1 = cx - 5, Y1 = 28, X2 = cx, Y2 = 30, Stroke = jerseyAccent, StrokeThickness = 1.5 });
-        canvas.Children.Add(new Line { X1 = cx + 5, Y1 = 28, X2 = cx, Y2 = 30, Stroke = jerseyAccent, StrokeThickness = 1.5 });
+        // Outstretched SIUUU pixel arms (left & right blocks)
+        Rectangle leftArm = new Rectangle { Width = 10, Height = 4, Fill = skin };
+        Canvas.SetLeft(leftArm, cx - 18);
+        Canvas.SetTop(leftArm, 32);
+        canvas.Children.Add(leftArm);
 
-        // SIUUU Arms spread wide behind
-        canvas.Children.Add(new Line
-        {
-            X1 = cx - 9, Y1 = 31, X2 = cx - 21, Y2 = 40,
-            Stroke = skin, StrokeThickness = 3,
-            StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round
-        });
-        // Left fingers
-        canvas.Children.Add(new Line { X1 = cx - 21, Y1 = 40, X2 = cx - 23, Y2 = 38, Stroke = skin, StrokeThickness = 1.5 });
-        canvas.Children.Add(new Line { X1 = cx - 21, Y1 = 40, X2 = cx - 23, Y2 = 41, Stroke = skin, StrokeThickness = 1.5 });
+        Rectangle rightArm = new Rectangle { Width = 10, Height = 4, Fill = skin };
+        Canvas.SetLeft(rightArm, cx + 8);
+        Canvas.SetTop(rightArm, 32);
+        canvas.Children.Add(rightArm);
 
-        canvas.Children.Add(new Line
-        {
-            X1 = cx + 9, Y1 = 31, X2 = cx + 21, Y2 = 40,
-            Stroke = skin, StrokeThickness = 3,
-            StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round
-        });
-        // Right fingers
-        canvas.Children.Add(new Line { X1 = cx + 21, Y1 = 40, X2 = cx + 23, Y2 = 38, Stroke = skin, StrokeThickness = 1.5 });
-        canvas.Children.Add(new Line { X1 = cx + 21, Y1 = 40, X2 = cx + 23, Y2 = 41, Stroke = skin, StrokeThickness = 1.5 });
-
-        // Shorts
-        Rectangle shortsRect = new Rectangle { Width = 16, Height = 8, Fill = shorts, RadiusX = 1, RadiusY = 1 };
+        // Pixel Shorts
+        Rectangle shortsRect = new Rectangle { Width = 16, Height = 8, Fill = shorts };
         Canvas.SetLeft(shortsRect, cx - 8);
-        Canvas.SetTop(shortsRect, 46);
+        Canvas.SetTop(shortsRect, 48);
         canvas.Children.Add(shortsRect);
 
-        // Left leg (apart — SIUUU landing)
-        canvas.Children.Add(new Line
-        {
-            X1 = cx - 5, Y1 = 54, X2 = cx - 12, Y2 = Height - 6,
-            Stroke = socks, StrokeThickness = 4,
-            StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round
-        });
+        // Pixel Legs (apart SIUUU stance)
+        Rectangle leftLeg = new Rectangle { Width = 6, Height = 18, Fill = skin };
+        Canvas.SetLeft(leftLeg, cx - 12);
+        Canvas.SetTop(leftLeg, 54);
+        canvas.Children.Add(leftLeg);
 
-        // Right leg (apart — SIUUU landing)
-        canvas.Children.Add(new Line
-        {
-            X1 = cx + 5, Y1 = 54, X2 = cx + 12, Y2 = Height - 6,
-            Stroke = socks, StrokeThickness = 4,
-            StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round
-        });
+        Rectangle rightLeg = new Rectangle { Width = 6, Height = 18, Fill = skin };
+        Canvas.SetLeft(rightLeg, cx + 6);
+        Canvas.SetTop(rightLeg, 54);
+        canvas.Children.Add(rightLeg);
 
-        // Left boot — touching bottom of canvas = touching GroundY
-        Rectangle leftBoot = new Rectangle { Width = 9, Height = 5, Fill = bootsBrush, RadiusX = 2, RadiusY = 2 };
-        Canvas.SetLeft(leftBoot, cx - 16);
-        Canvas.SetTop(leftBoot, Height - 6);
+        // Pixel Boots
+        Rectangle leftBoot = new Rectangle { Width = 8, Height = 5, Fill = bootsBrush };
+        Canvas.SetLeft(leftBoot, cx - 14);
+        Canvas.SetTop(leftBoot, Height - 5);
         canvas.Children.Add(leftBoot);
 
-        // Right boot — touching bottom
-        Rectangle rightBoot = new Rectangle { Width = 9, Height = 5, Fill = bootsBrush, RadiusX = 2, RadiusY = 2 };
-        Canvas.SetLeft(rightBoot, cx + 8);
-        Canvas.SetTop(rightBoot, Height - 6);
+        Rectangle rightBoot = new Rectangle { Width = 8, Height = 5, Fill = bootsBrush };
+        Canvas.SetLeft(rightBoot, cx + 6);
+        Canvas.SetTop(rightBoot, Height - 5);
         canvas.Children.Add(rightBoot);
 
         return canvas;
@@ -474,83 +464,61 @@ public sealed class Obstacle
     private UIElement BuildMessiVisual()
     {
         Canvas canvas = new Canvas { Width = Width, Height = Height };
+        RenderOptions.SetEdgeMode(canvas, EdgeMode.Aliased);
+        RenderOptions.SetBitmapScalingMode(canvas, BitmapScalingMode.NearestNeighbor);
 
         SolidColorBrush skin = new SolidColorBrush(Color.FromRgb(230, 190, 150));
         SolidColorBrush hairBrush = new SolidColorBrush(Color.FromRgb(35, 28, 20));
         SolidColorBrush beardBrush = new SolidColorBrush(Color.FromRgb(60, 50, 40));
-        SolidColorBrush jerseyBlue = new SolidColorBrush(Color.FromRgb(108, 172, 228));  // Argentina sky blue
-        SolidColorBrush jerseyWhite = new SolidColorBrush(Color.FromRgb(245, 245, 250)); // Argentina white stripe
+        SolidColorBrush jerseyBlue = new SolidColorBrush(Color.FromRgb(108, 172, 228));
+        SolidColorBrush jerseyWhite = new SolidColorBrush(Color.FromRgb(245, 245, 250));
         SolidColorBrush shortsDark = new SolidColorBrush(Color.FromRgb(20, 20, 45));
-        SolidColorBrush socksBrush = new SolidColorBrush(Color.FromRgb(240, 240, 245));
         SolidColorBrush bootsBrush = new SolidColorBrush(Color.FromRgb(25, 25, 25));
 
         double cx = Width / 2.0;
 
-        // "G.O.A.T" label above head
+        // "G.O.A.T" pixel banner label
         TextBlock goatLabel = new TextBlock
         {
             Text = "G.O.A.T",
-            FontSize = 6.5, FontWeight = FontWeights.ExtraBold,
+            FontSize = 8, FontWeight = FontWeights.ExtraBold,
             Foreground = new SolidColorBrush(Color.FromRgb(255, 215, 0)),
-            FontStyle = FontStyles.Italic
+            FontFamily = new FontFamily("Segoe UI")
         };
-        Canvas.SetLeft(goatLabel, cx - 14);
+        Canvas.SetLeft(goatLabel, cx - 15);
         Canvas.SetTop(goatLabel, 0);
         canvas.Children.Add(goatLabel);
 
-        // Hair (Messi's longer messy style)
-        Ellipse hair = new Ellipse { Width = 17, Height = 12, Fill = hairBrush };
-        Canvas.SetLeft(hair, cx - 8.5);
-        Canvas.SetTop(hair, 8);
+        // Pixel Hair block
+        Rectangle hair = new Rectangle { Width = 16, Height = 8, Fill = hairBrush };
+        Canvas.SetLeft(hair, cx - 8);
+        Canvas.SetTop(hair, 10);
         canvas.Children.Add(hair);
 
-        // Head
-        Ellipse head = new Ellipse
-        {
-            Width = 14, Height = 14, Fill = skin,
-            Stroke = new SolidColorBrush(Color.FromRgb(190, 155, 120)), StrokeThickness = 0.5
-        };
+        // Pixel Head block
+        Rectangle head = new Rectangle { Width = 14, Height = 14, Fill = skin };
         Canvas.SetLeft(head, cx - 7);
-        Canvas.SetTop(head, 12);
+        Canvas.SetTop(head, 14);
         canvas.Children.Add(head);
 
-        // Beard
-        Ellipse beard = new Ellipse
-        {
-            Width = 10, Height = 6,
-            Fill = beardBrush
-        };
+        // Pixel Beard block
+        Rectangle beard = new Rectangle { Width = 10, Height = 5, Fill = beardBrush };
         Canvas.SetLeft(beard, cx - 5);
-        Canvas.SetTop(beard, 21);
+        Canvas.SetTop(beard, 23);
         canvas.Children.Add(beard);
 
-        // Neck
-        Rectangle neck = new Rectangle { Width = 4, Height = 4, Fill = skin };
-        Canvas.SetLeft(neck, cx - 2);
-        Canvas.SetTop(neck, 25);
-        canvas.Children.Add(neck);
-
-        // Argentina jersey — sky blue with white center stripe
-        Rectangle torsoBlue = new Rectangle
-        {
-            Width = 18, Height = 19, Fill = jerseyBlue,
-            Stroke = new SolidColorBrush(Color.FromRgb(80, 140, 200)),
-            StrokeThickness = 0.8, RadiusX = 2, RadiusY = 2
-        };
+        // Argentina Jersey (blue base + white stripe block)
+        Rectangle torsoBlue = new Rectangle { Width = 18, Height = 20, Fill = jerseyBlue };
         Canvas.SetLeft(torsoBlue, cx - 9);
         Canvas.SetTop(torsoBlue, 28);
         canvas.Children.Add(torsoBlue);
 
-        // White vertical stripe (center of jersey)
-        Rectangle whiteStripe = new Rectangle
-        {
-            Width = 6, Height = 19, Fill = jerseyWhite
-        };
+        Rectangle whiteStripe = new Rectangle { Width = 6, Height = 20, Fill = jerseyWhite };
         Canvas.SetLeft(whiteStripe, cx - 3);
         Canvas.SetTop(whiteStripe, 28);
         canvas.Children.Add(whiteStripe);
 
-        // #10 on jersey
+        // #10 number
         TextBlock number = new TextBlock
         {
             Text = "10", FontSize = 8, FontWeight = FontWeights.ExtraBold,
@@ -560,69 +528,43 @@ public sealed class Obstacle
         Canvas.SetTop(number, 32);
         canvas.Children.Add(number);
 
-        // Both arms POINTING UP to the sky (Messi celebration)
-        // Left arm up
-        canvas.Children.Add(new Line
-        {
-            X1 = cx - 8, Y1 = 30, X2 = cx - 12, Y2 = 15,
-            Stroke = skin, StrokeThickness = 3,
-            StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round
-        });
-        // Left index finger pointing up
-        canvas.Children.Add(new Line
-        {
-            X1 = cx - 12, Y1 = 15, X2 = cx - 12, Y2 = 10,
-            Stroke = skin, StrokeThickness = 2,
-            StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round
-        });
+        // Pointing Up Arms (pixel blocks)
+        Rectangle leftArm = new Rectangle { Width = 4, Height = 14, Fill = skin };
+        Canvas.SetLeft(leftArm, cx - 12);
+        Canvas.SetTop(leftArm, 16);
+        canvas.Children.Add(leftArm);
 
-        // Right arm up
-        canvas.Children.Add(new Line
-        {
-            X1 = cx + 8, Y1 = 30, X2 = cx + 12, Y2 = 15,
-            Stroke = skin, StrokeThickness = 3,
-            StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round
-        });
-        // Right index finger pointing up
-        canvas.Children.Add(new Line
-        {
-            X1 = cx + 12, Y1 = 15, X2 = cx + 12, Y2 = 10,
-            Stroke = skin, StrokeThickness = 2,
-            StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round
-        });
+        Rectangle rightArm = new Rectangle { Width = 4, Height = 14, Fill = skin };
+        Canvas.SetLeft(rightArm, cx + 8);
+        Canvas.SetTop(rightArm, 16);
+        canvas.Children.Add(rightArm);
 
         // Shorts
-        Rectangle shortsRect = new Rectangle { Width = 16, Height = 8, Fill = shortsDark, RadiusX = 1, RadiusY = 1 };
+        Rectangle shortsRect = new Rectangle { Width = 16, Height = 8, Fill = shortsDark };
         Canvas.SetLeft(shortsRect, cx - 8);
-        Canvas.SetTop(shortsRect, 47);
+        Canvas.SetTop(shortsRect, 48);
         canvas.Children.Add(shortsRect);
 
-        // Left leg (standing straight, calm pose)
-        canvas.Children.Add(new Line
-        {
-            X1 = cx - 4, Y1 = 55, X2 = cx - 5, Y2 = Height - 7,
-            Stroke = socksBrush, StrokeThickness = 4,
-            StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round
-        });
+        // Pixel Legs
+        Rectangle leftLeg = new Rectangle { Width = 6, Height = 18, Fill = skin };
+        Canvas.SetLeft(leftLeg, cx - 7);
+        Canvas.SetTop(leftLeg, 54);
+        canvas.Children.Add(leftLeg);
 
-        // Right leg (slightly apart)
-        canvas.Children.Add(new Line
-        {
-            X1 = cx + 4, Y1 = 55, X2 = cx + 6, Y2 = Height - 7,
-            Stroke = socksBrush, StrokeThickness = 4,
-            StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round
-        });
+        Rectangle rightLeg = new Rectangle { Width = 6, Height = 18, Fill = skin };
+        Canvas.SetLeft(rightLeg, cx + 1);
+        Canvas.SetTop(rightLeg, 54);
+        canvas.Children.Add(rightLeg);
 
-        // Left boot — touching bottom
-        Rectangle leftBoot = new Rectangle { Width = 9, Height = 5, Fill = bootsBrush, RadiusX = 2, RadiusY = 2 };
+        // Boots
+        Rectangle leftBoot = new Rectangle { Width = 8, Height = 5, Fill = bootsBrush };
         Canvas.SetLeft(leftBoot, cx - 9);
-        Canvas.SetTop(leftBoot, Height - 6);
+        Canvas.SetTop(leftBoot, Height - 5);
         canvas.Children.Add(leftBoot);
 
-        // Right boot — touching bottom
-        Rectangle rightBoot = new Rectangle { Width = 9, Height = 5, Fill = bootsBrush, RadiusX = 2, RadiusY = 2 };
-        Canvas.SetLeft(rightBoot, cx + 2);
-        Canvas.SetTop(rightBoot, Height - 6);
+        Rectangle rightBoot = new Rectangle { Width = 8, Height = 5, Fill = bootsBrush };
+        Canvas.SetLeft(rightBoot, cx + 1);
+        Canvas.SetTop(rightBoot, Height - 5);
         canvas.Children.Add(rightBoot);
 
         return canvas;

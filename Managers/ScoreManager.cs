@@ -2,7 +2,6 @@ using WPF_Motorcycle_Trip_Game.Core;
 
 namespace WPF_Motorcycle_Trip_Game.Managers;
 
-// Owned by: Khang
 // Manages real-time score accumulation, capping at target score, and state reset.
 public sealed class ScoreManager
 {
