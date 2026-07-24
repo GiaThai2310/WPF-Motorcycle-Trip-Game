@@ -2,8 +2,8 @@
 
 ## Purpose and current status
 
-This document is the handoff contract for integrating all member branches into
-the WPF Motorcycle Road Trip game.
+This document is the shared task sheet and handoff contract for integrating all
+member branches into the WPF Motorcycle Road Trip game.
 
 Thai's engine foundation is implemented and the project builds. Final gameplay
 integration is **not complete** until every scaffold in the status table has
@@ -14,12 +14,12 @@ been replaced and the final checklist has passed.
 | Constants and states | Thai | Implemented |
 | Shared game loop and transitions | Thai | Implemented |
 | Keyboard and restart wiring | Thai | Implemented |
-| Motorcycle physics | Khang | Scaffold; jump/update are no-ops |
-| Obstacles and spawning | Vinh | Scaffold; update/reset are no-ops |
-| Collision service | Dang | Minimal compatible implementation |
-| Score manager | Van | Minimal compatible implementation |
-| Visual manager and final UI | Quan | Minimal compatible implementation |
-| Assets and styles | Quan | Not implemented |
+| Motorcycle physics | Khang | Implemented |
+| Obstacles and spawning | Vinh | Implemented |
+| Collision service | Dang | Implemented |
+| Score manager | Khang | Implemented |
+| Visual manager and final UI | Quan | Needs fixes: end-state UI, restart-button visibility, and final-score consistency |
+| XAML, assets, and styles | Van | Implemented |
 
 ## Build and runtime baseline
 
@@ -198,6 +198,19 @@ public sealed class VisualManager
 Visual methods must only update presentation. They must not create a timer or
 change the engine state.
 
+Additional end-state UI requirements:
+
+- `ShowGameOver(int score)` must clearly display the Game Over state and the
+  exact `score` value passed by `GameEngine`.
+- The score shown in the Game Over message and `ScoreText` must match the same
+  `ScoreManager.Score` snapshot. `VisualManager` must not calculate or maintain
+  a separate score.
+- `ShowGameOver(int score)` and `ShowVictory()` must make `RestartButton`
+  visible and usable.
+- `ShowRunning()` must hide the end-state message and `RestartButton`.
+- End-state text and the restart button must remain readable, visible, and
+  free from overlap or clipping.
+
 ## Required XAML element names
 
 The following fields are referenced directly by `MainWindow.xaml.cs` and must
@@ -248,11 +261,11 @@ independently change these values:
 
 Integrate in this order:
 
-1. Quan: final XAML, visual manager, styles, and assets.
-2. Khang: bike controller.
-3. Vinh: models and obstacle manager.
-4. Dang: collision service.
-5. Van: score manager.
+1. Van: final XAML, styles, and assets.
+2. Quan: visual manager.
+3. Khang: bike controller and score manager.
+4. Vinh: models and obstacle manager.
+5. Dang: collision service.
 6. Thai: resolve integration errors and run the final checklist.
 
 For each merge:
@@ -273,23 +286,28 @@ For each merge:
 - [ ] All three obstacle types spawn without overlap.
 - [ ] Obstacles move using the supplied speed and delta time.
 - [ ] Collision immediately enters `GameOver`.
+- [ ] The Game Over UI clearly shows the loss state, final score, and restart
+      action without overlap or clipping.
+- [ ] The final score shown in the Game Over message exactly matches
+      `ScoreText` and `ScoreManager.Score`.
 - [ ] Score changes only while state is `Running`.
 - [ ] Score reaches and never exceeds 1000.
 - [ ] Reaching 1000 enters `Victory`.
 - [ ] `R` and the Restart button reset bike, obstacles, score, and visuals.
+- [ ] `RestartButton` is visible and clickable in both `GameOver` and
+      `Victory`.
 - [ ] Closing the window stops and detaches the timer.
 - [ ] Assets load from a fresh clone.
 - [ ] The project builds with zero errors.
 
 ## Known integration limitations
 
-At the time this document was created:
+At the time this document was last reviewed:
 
-- The app builds, but the bike cannot jump because the bike scaffold has no
-  physics.
-- No obstacles spawn because the obstacle scaffold has no implementation.
-- Consequently, collision-driven Game Over cannot yet occur through normal
-  gameplay.
-- The temporary UI has no final assets or shared styles.
+- `RestartButton` remains hidden in the current Game Over and Victory views.
+- The Game Over score display has been reported as inconsistent with the
+  actual score and requires a single-source-of-truth UI fix and runtime
+  verification.
+- The final acceptance checklist has not yet been completed end to end.
 
-These are pending member deliverables, not `GameEngine` defects.
+These are pending final-UI and integration-verification tasks.

@@ -1,6 +1,6 @@
 # Repository instructions
 
-Read [docs/THAI_GAME_ENGINE_INTEGRATION.md](docs/THAI_GAME_ENGINE_INTEGRATION.md)
+Read [docs/GAME_ENGINE_INTEGRATION.md](docs/GAME_ENGINE_INTEGRATION.md)
 before implementing or integrating a game subsystem.
 
 ## Non-negotiable integration rules
@@ -22,12 +22,12 @@ before implementing or integrating a game subsystem.
 ## File ownership
 
 - Thai: `Core/*`, `MainWindow.xaml.cs`, `App.xaml`, final integration.
-- Khang: `Controllers/BikeController.cs`.
+- Khang: `Controllers/BikeController.cs`, `Managers/ScoreManager.cs`.
 - Vinh: `Models/*`, `Managers/ObstacleManager.cs`.
 - Dang: `Services/CollisionService.cs`.
-- Van: `Managers/ScoreManager.cs`.
-- Quan: `MainWindow.xaml`, `Managers/VisualManager.cs`, `Resources/*`,
+- Van: `MainWindow.xaml`, style-related resources, `Resources/*`,
   `Assets/*`.
+- Quan: `Managers/VisualManager.cs`.
 
 Some member-owned files currently contain integration scaffolds. Their comments
 and the status table in the integration specification identify these files.
